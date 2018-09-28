@@ -1,3 +1,3 @@
 [submodule "fp-world"]
 	path = fp-world
-	url = https://github.com/LaOwlLol/fp-world.git
+	url = git@github.com:LaOwlLol/fp-world.git
