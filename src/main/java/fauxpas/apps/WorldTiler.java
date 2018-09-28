@@ -28,7 +28,7 @@ public class WorldTiler extends Application {
         Tile blank = new Tile(1,3);
         this.assets = new TileImageDirectory(50);
 
-        this.assets.addTile(blank,
+        this.assets.map(blank,
                 new Image( Paths.get(System.getProperty("user.home"), "WorldTiler", "temp1.png" ).toUri().toString() )
         );
 
