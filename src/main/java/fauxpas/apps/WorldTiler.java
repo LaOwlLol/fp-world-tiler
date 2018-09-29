@@ -1,6 +1,7 @@
 package fauxpas.apps;
 
 import fauxpas.collections.TileImageDirectory;
+import fauxpas.components.TileEditor;
 import fauxpas.entities.Tile;
 import fauxpas.entities.World;
 import fauxpas.views.ScrollableWorldView;
@@ -19,84 +20,56 @@ public class WorldTiler extends Application {
 
     private static final int VIEW_WIDTH_TILES = 4;
     private static final int VIEW_HEIGHT_TILES = 3;
-    private static final int STATUS_HEIGHT = 70;
 
-    private World world;
-    private TileImageDirectory assets;
-    private ScrollableWorldView view;
-    private int tile_Dim;
-    Tile blank;
+    private TileEditor editor;
+
 
     public WorldTiler() {
 
-        tile_Dim = 150;
+        int tile_Dim = 150;
 
         //define some tiles.
-        Tile blank = new Tile(1,0);
-        Tile grass = new Tile (0, 0);
+        Tile blank = new Tile(0,0);
+        Tile grass = new Tile (1, 0);
 
         //construct a new assets directory with dims matching local assets.
-        this.assets = new TileImageDirectory(tile_Dim);
+        TileImageDirectory assets = new TileImageDirectory(tile_Dim);
 
         //map tiles to image assets.
-        this.assets.map(blank,
+        assets.map(blank,
                 new Image( Paths.get(System.getProperty("user.home"),
                       "WorldTiler", "water", "water_0.png" ).toUri().toString() )
         );
-        this.assets.map(grass,
+        assets.map(grass,
               new Image( Paths.get(System.getProperty("user.home"),
                     "WorldTiler", "grass", "grass_0.png" ).toUri().toString() )
         );
 
         //construct a world with blank tile.
-        this.world = new World(10,10, blank);
+        World world = new World(10,10, blank);
+
         //set a tile to grass.
-        this.world.setTile(1,0, grass);
+        world.setTile(1,0, grass);
 
         //construct a view on the world using the asset set.
-        this.view = new ScrollableWorldView(0,0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
+        ScrollableWorldView view = new ScrollableWorldView(0,0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
+
+        //construct the canvas view will draw on.
+        Canvas canvas = new Canvas(tile_Dim*VIEW_WIDTH_TILES,tile_Dim*VIEW_HEIGHT_TILES);
+
+        this.editor = new TileEditor(world, assets, view, canvas);
 
     }
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         primaryStage.setTitle("World-Tiler");
         AnchorPane root = new AnchorPane();
 
-        Canvas worldMap = new Canvas(tile_Dim*VIEW_WIDTH_TILES,tile_Dim*VIEW_HEIGHT_TILES + STATUS_HEIGHT);
+        root.getChildren().add(editor.getCanvas());
+        root.setLeftAnchor(editor.getCanvas(), 10.0);
 
-        Button sl = new Button("<-");
-        sl.setOnAction( e -> {
-            view.scrollX( -1 );
-        } );
-
-        Button sr = new Button("->");
-        sr.setOnAction( e -> {
-            view.scrollX( +1 );
-        } );
-
-        root.getChildren().add(worldMap);
-        root.getChildren().add(sl);
-        root.getChildren().add(sr);
-        root.setLeftAnchor(worldMap, 10.0);
-        root.setRightAnchor(sl, 10.0);
-        root.setTopAnchor(sl, 10.0);
-        root.setRightAnchor(sr, 10.0);
-        root.setBottomAnchor(sr, 10.0);
-
-        AnimationTimer timer = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                worldMap.getGraphicsContext2D().clearRect(0,0,tile_Dim*VIEW_WIDTH_TILES,tile_Dim*VIEW_HEIGHT_TILES + STATUS_HEIGHT);
-                view.render(worldMap.getGraphicsContext2D());
-                worldMap.getGraphicsContext2D().strokeText( Integer.toString(view.getX()) +
-                      "(to "+ Integer.toString(view.getX()+VIEW_WIDTH_TILES)+")", 300,480);
-                worldMap.getGraphicsContext2D().strokeText( ","+Integer.toString(view.getY()) +
-                      "(to "+ Integer.toString(view.getY()+ VIEW_HEIGHT_TILES)+")", 345,480);
-            }
-        };
-
-        timer.start();
+        this.editor.startRender();
 
         Scene scene = new Scene(root, 1024, 768);
         primaryStage.setScene(scene);
