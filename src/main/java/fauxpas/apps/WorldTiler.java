@@ -23,27 +23,29 @@ public class WorldTiler extends Application {
 
     private TileEditor editor;
 
-
     public WorldTiler() {
 
         int tile_Dim = 150;
 
         //define some tiles.
-        Tile blank = new Tile(0,0);
-        Tile grass = new Tile (1, 0);
+        Tile blank = new Tile("water",
+              Paths.get(System.getProperty("user.home"), "WorldTiler", "water", "water_0.png" ).toString());
+        Tile grass = new Tile ("grass",
+              Paths.get(System.getProperty("user.home"), "WorldTiler", "grass", "grass_0.png" ).toString());
 
         //construct a new assets directory with dims matching local assets.
-        TileImageDirectory assets = new TileImageDirectory(tile_Dim);
+        TileImageDirectory assets = TileImageDirectory.LoadFromFileSystem(Paths.get(System.getProperty("user.home"),
+              "WorldTiler").toString(), tile_Dim, true);
 
         //map tiles to image assets.
-        assets.map(blank,
+        /*assets.map(blank,
                 new Image( Paths.get(System.getProperty("user.home"),
                       "WorldTiler", "water", "water_0.png" ).toUri().toString() )
         );
         assets.map(grass,
               new Image( Paths.get(System.getProperty("user.home"),
                     "WorldTiler", "grass", "grass_0.png" ).toUri().toString() )
-        );
+        );*/
 
         //construct a world with blank tile.
         World world = new World(10,10, blank);
@@ -58,7 +60,6 @@ public class WorldTiler extends Application {
         Canvas canvas = new Canvas(tile_Dim*VIEW_WIDTH_TILES,tile_Dim*VIEW_HEIGHT_TILES);
 
         this.editor = new TileEditor(world, assets, view, canvas);
-
     }
 
     @Override
