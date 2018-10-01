@@ -71,6 +71,7 @@ public class WorldTiler extends Application {
         root.setLeftAnchor(editor.getCanvas(), 10.0);
 
         this.editor.startRender();
+        this.editor.initEventHandlers();
 
         Scene scene = new Scene(root, 1024, 768);
         primaryStage.setScene(scene);
