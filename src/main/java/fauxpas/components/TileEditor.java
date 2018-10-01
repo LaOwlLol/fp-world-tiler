@@ -9,10 +9,12 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 public class TileEditor {
 
-    private static final int EDGE_SCROLL_INSET = 25;
+    private static final long TENTH_SECOND_IN_NANO = 100000000;
 
     private World world;
     private TileImageDirectory assets;
@@ -20,10 +22,19 @@ public class TileEditor {
     private Canvas canvas;
 
     private AnimationTimer animTimer;
+    private AnimationTimer scrollTimer;
     private boolean drawing;
 
     private int browsedTileX;
     private int browsedTileY;
+    private int scrollModX;
+    private int scrollModY;
+
+    double smoothScrollFactor;
+    private int edgeInsetForScrollDetection;
+
+    AtomicInteger frame;
+    AtomicInteger scroll;
 
     public TileEditor(World world, TileImageDirectory assets, ScrollableWorldView view, Canvas canvas) {
         this.world = world;
@@ -34,10 +45,19 @@ public class TileEditor {
         this.drawing = false;
         browsedTileX = -1;
         browsedTileY = -1;
+        scrollModX = 0;
+        scrollModY = 0;
+
+        smoothScrollFactor = 2.5;
+        edgeInsetForScrollDetection = Math.max(25, assets.getTileDimension()/3);
+
+        frame = new AtomicInteger(0);
+        scroll = new AtomicInteger(0);
     }
 
     public void startRender() {
         if (!drawing) {
+
             animTimer = new AnimationTimer() {
                 @Override
                 public void handle(long now) {
@@ -46,6 +66,7 @@ public class TileEditor {
                     view.render(canvas.getGraphicsContext2D());
                     canvas.getGraphicsContext2D().setStroke(Color.IVORY);
                     DrawBrowsedTileFocus();
+                    frame.getAndIncrement();
                 }
             };
 
@@ -64,12 +85,21 @@ public class TileEditor {
 
     public void stopRender() {
         animTimer.stop();
+        scrollTimer.stop();
         drawing = false;
     }
 
     public void initEventHandlers() {
         canvas.addEventHandler(MouseEvent.MOUSE_MOVED, (EventHandler<MouseEvent>) event -> {
-            ScrollMouse(event);
+
+            UpdateFocusedTile(event);
+            UpdateViewScroll(event);
+
+            if ((scroll.get() % smoothScrollFactor) == 0) {
+                view.scroll(scrollModX, scrollModY);
+            }
+
+            scroll.getAndIncrement();
         });
 
         canvas.addEventHandler(MouseEvent.MOUSE_EXITED, (EventHandler<MouseEvent>) event ->{
@@ -77,22 +107,44 @@ public class TileEditor {
             browsedTileY = -1;
         });
 
+        scrollTimer = new AnimationTimer() {
+            long last;
+
+            @Override
+            public void handle(long now) {
+                if ( (now-last) > (smoothScrollFactor*TENTH_SECOND_IN_NANO) ) {
+                    view.scroll(scrollModX, scrollModY);
+                    last = now;
+                }
+            }
+        };
+        scrollTimer.start();
+
     }
 
-    private void ScrollMouse(MouseEvent event) {
-        if (event.getX() < EDGE_SCROLL_INSET) {
-            view.scrollX(-1);
+    private void UpdateViewScroll(MouseEvent event) {
+
+        if (event.getX() < edgeInsetForScrollDetection) {
+            scrollModX = -1;
+        } else if (event.getX() > ((assets.getTileDimension() * view.getWidth()) - edgeInsetForScrollDetection)) {
+            scrollModX = 1;
         }
-        else if (event.getX() > ((assets.getTileDimension()*view.getWidth())-EDGE_SCROLL_INSET)) {
-            view.scrollX(1);
-        }
-        if (event.getY() < EDGE_SCROLL_INSET) {
-            view.scrollY(-1);
-        }
-        else if (event.getY() > ((assets.getTileDimension()*view.getHeight())-EDGE_SCROLL_INSET)) {
-            view.scrollY(1);
+        else {
+            scrollModX = 0;
         }
 
+        if (event.getY() < edgeInsetForScrollDetection) {
+            scrollModY = -1;
+        } else if (event.getY() > ((assets.getTileDimension() * view.getHeight()) - edgeInsetForScrollDetection)) {
+            scrollModY = 1;
+        }
+        else {
+            scrollModY = 0;
+        }
+
+    }
+
+    private void UpdateFocusedTile(MouseEvent event) {
         browsedTileX = (int) (event.getX() / assets.getTileDimension());
         browsedTileY = (int) (event.getY() / assets.getTileDimension());
     }
