@@ -34,7 +34,6 @@ public class TileEditor {
     private int edgeInsetForScrollDetection;
 
     AtomicInteger frame;
-    AtomicInteger scroll;
 
     public TileEditor(World world, TileImageDirectory assets, ScrollableWorldView view, Canvas canvas) {
         this.world = world;
@@ -52,7 +51,6 @@ public class TileEditor {
         edgeInsetForScrollDetection = Math.max(25, assets.getTileDimension()/3);
 
         frame = new AtomicInteger(0);
-        scroll = new AtomicInteger(0);
     }
 
     public void startRender() {
@@ -95,11 +93,6 @@ public class TileEditor {
             UpdateFocusedTile(event);
             UpdateViewScroll(event);
 
-            if ((scroll.get() % smoothScrollFactor) == 0) {
-                view.scroll(scrollModX, scrollModY);
-            }
-
-            scroll.getAndIncrement();
         });
 
         canvas.addEventHandler(MouseEvent.MOUSE_EXITED, (EventHandler<MouseEvent>) event ->{
@@ -112,7 +105,7 @@ public class TileEditor {
 
             @Override
             public void handle(long now) {
-                if ( (now-last) > (smoothScrollFactor*TENTH_SECOND_IN_NANO) ) {
+                if ( ((now-last) > (smoothScrollFactor*TENTH_SECOND_IN_NANO)) && browsedTileX != -1 && browsedTileY != -1 ) {
                     view.scroll(scrollModX, scrollModY);
                     last = now;
                 }
