@@ -70,7 +70,10 @@ public class WorldTiler extends Application {
 
         this.editor = new TileEditor(world, assets, view, canvas);
 
-        this.miniMap = new MiniMapWorldView(0, 0, 200, 125, world, assets);
+        this.miniMap = new MiniMapWorldView(0, 0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
+
+        view.registerChangeListener(miniMap);
+
     }
 
     @Override
@@ -93,7 +96,7 @@ public class WorldTiler extends Application {
         AnimationTimer animTimer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                miniCanvas.getGraphicsContext2D().clearRect(0,0,200, 125);
+                miniCanvas.getGraphicsContext2D().clearRect(0,0,miniCanvas.getWidth(), miniCanvas.getWidth());
                 miniMap.render(miniCanvas.getGraphicsContext2D());
             }
         };
