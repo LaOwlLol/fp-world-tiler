@@ -73,6 +73,7 @@ public class WorldTiler extends Application {
         this.miniMap = new MiniMapWorldView(0, 0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
 
         view.registerChangeListener(miniMap);
+        this.miniMap.setTrackScrollView(true);
 
     }
 
