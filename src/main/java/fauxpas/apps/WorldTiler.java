@@ -1,6 +1,7 @@
 package fauxpas.apps;
 
 import fauxpas.collections.TileImageDirectory;
+import fauxpas.components.EditorMiniMap;
 import fauxpas.components.TileEditor;
 import fauxpas.entities.Tile;
 import fauxpas.entities.World;
@@ -15,6 +16,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+
+import java.nio.file.Files;
 import java.nio.file.Paths;
 
 
@@ -24,7 +27,7 @@ public class WorldTiler extends Application {
     private static final int VIEW_HEIGHT_TILES = 5;
 
     private TileEditor editor;
-    private MiniMapWorldView miniMap;
+    private EditorMiniMap miniMap;
 
     public WorldTiler() {
 
@@ -50,30 +53,53 @@ public class WorldTiler extends Application {
                     "WorldTiler", "grass", "grass_0.png" ).toUri().toString() )
         );*/
 
-        //construct a world with blank tile.
-        World world = new World(30,30, blank);
+        World world;
 
-        //set a tile to grass.
-        world.setTile(1,0, grass);
+        world = World.ReadFromFile(
+              Paths.get(System.getProperty("user.home"), "WorldTiler", "world_1").toString()).orElseGet(
+              () -> {
 
-        for (int j = 15; j < 25; ++j) {
-            for (int i = 15; i < 25; ++i) {
-                world.setTile(i, j, grass);
-            }
-        }
+                  System.out.println("Failed to load world from file!");
 
-        //construct a view on the world using the asset set.
-        ScrollableWorldView view = new ScrollableWorldView(0,0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
+                  //construct a world with blank tile.
+                  World w = new World(30,30, blank);
 
-        //construct the canvas view will draw on.
-        Canvas canvas = new Canvas(tile_Dim*VIEW_WIDTH_TILES,tile_Dim*VIEW_HEIGHT_TILES);
+                  //set a tile to grass.
+                  w.setTile(1,0, grass);
 
-        this.editor = new TileEditor(world, assets, view, canvas);
+                  for (int j = 15; j < 25; ++j) {
+                      for (int i = 15; i < 25; ++i) {
+                          w.setTile(i, j, grass);
+                      }
+                  }
+                  return w;
+              }
+        );
 
-        this.miniMap = new MiniMapWorldView(0, 0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
+        //World.WriteToFile(world,  Paths.get(System.getProperty("user.home"), "WorldTiler", "world_1").toString() );
 
-        view.registerChangeListener(miniMap);
-        this.miniMap.setTrackScrollView(true);
+        //construct a ScrollableWorldView for the TileEditor.
+        ScrollableWorldView scrollableView = new ScrollableWorldView(0,0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
+
+        //construct the Canvas that scrollableView will draw on.
+        Canvas scrollCanvas = new Canvas(tile_Dim*VIEW_WIDTH_TILES,tile_Dim*VIEW_HEIGHT_TILES);
+
+        //create the editor component
+        this.editor = new TileEditor(world, assets, scrollableView, scrollCanvas);
+
+        //construct a MiniMapWorldView for an over view of the world under construction.
+        MiniMapWorldView miniMapView = new MiniMapWorldView(0, 0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
+
+        //construct the Canvas that miniMapView will draw on.
+        Canvas miniMapCanvas = new Canvas(200, 125);
+
+        //register observer miniMapView to support in observable scrollableView.
+        scrollableView.registerChangeListener(miniMapView);
+        //turn on preview rendering of observed scrollView.
+        miniMapView.setTrackScrollView(true);
+
+        //construct the mini map component.
+        this.miniMap = new EditorMiniMap(world, miniMapView, miniMapCanvas);
 
     }
 
@@ -88,21 +114,11 @@ public class WorldTiler extends Application {
         this.editor.startRender();
         this.editor.initEventHandlers();
 
-        Canvas miniCanvas = new Canvas(200, 125);
+        root.getChildren().add(this.miniMap.getCanvas());
+        root.setLeftAnchor(this.miniMap.getCanvas(), 10.0);
+        root.setBottomAnchor(this.miniMap.getCanvas(), 10.0);
 
-        root.getChildren().add(miniCanvas);
-        root.setLeftAnchor(miniCanvas, 10.0);
-        root.setBottomAnchor(miniCanvas, 10.0);
-
-        AnimationTimer animTimer = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                miniCanvas.getGraphicsContext2D().clearRect(0,0,miniCanvas.getWidth(), miniCanvas.getWidth());
-                miniMap.render(miniCanvas.getGraphicsContext2D());
-            }
-        };
-
-        animTimer.start();
+        this.miniMap.startRender();
 
         Scene scene = new Scene(root, 1024, 768);
         primaryStage.setScene(scene);
