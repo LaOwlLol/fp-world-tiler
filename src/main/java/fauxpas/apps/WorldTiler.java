@@ -1,6 +1,7 @@
 package fauxpas.apps;
 
 import fauxpas.collections.TileImageDirectory;
+import fauxpas.components.AssetPalette;
 import fauxpas.components.EditorMiniMap;
 import fauxpas.components.TileEditor;
 import fauxpas.entities.Tile;
@@ -9,11 +10,13 @@ import fauxpas.views.MiniMapWorldView;
 import fauxpas.views.ScrollableWorldView;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.Scene;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
@@ -28,19 +31,23 @@ public class WorldTiler extends Application {
 
     private TileEditor editor;
     private EditorMiniMap miniMap;
+    private AssetPalette palette;
+
+    private Tile blank;
+    private TileImageDirectory assets;
 
     public WorldTiler() {
 
         int tile_Dim = 75;
 
         //define some tiles.
-        Tile blank = new Tile("water",
+        this.blank = new Tile("water",
               Paths.get(System.getProperty("user.home"), "WorldTiler", "water", "water_0.png" ).toString());
         Tile grass = new Tile ("grass",
               Paths.get(System.getProperty("user.home"), "WorldTiler", "grass", "grass_0.png" ).toString());
 
         //construct a new assets directory with dims matching local assets.
-        TileImageDirectory assets = TileImageDirectory.LoadFromFileSystem(Paths.get(System.getProperty("user.home"),
+        this.assets = TileImageDirectory.LoadFromFileSystem(Paths.get(System.getProperty("user.home"),
               "WorldTiler").toString(), tile_Dim, true);
 
         //map tiles to image assets.
@@ -62,7 +69,7 @@ public class WorldTiler extends Application {
                   System.out.println("Failed to load world from file!");
 
                   //construct a world with blank tile.
-                  World w = new World(30,30, blank);
+                  World w = new World(300,300, this.blank);
 
                   //set a tile to grass.
                   w.setTile(1,0, grass);
@@ -91,7 +98,7 @@ public class WorldTiler extends Application {
         MiniMapWorldView miniMapView = new MiniMapWorldView(0, 0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
 
         //construct the Canvas that miniMapView will draw on.
-        Canvas miniMapCanvas = new Canvas(200, 125);
+        Canvas miniMapCanvas = new Canvas(600, 375);
 
         //register observer miniMapView to support in observable scrollableView.
         scrollableView.registerChangeListener(miniMapView);
@@ -107,6 +114,18 @@ public class WorldTiler extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("World-Tiler");
         AnchorPane root = new AnchorPane();
+
+        GridPane grid = new GridPane();
+        grid.setHgap(5);
+        grid.setVgap(5);
+        grid.setPadding(new Insets(5,5,5,5));
+        this.palette = new AssetPalette(grid, this.assets, this.blank);
+        this.palette.initLayout();
+        this.palette.registerChangeListener(this.editor);
+
+        root.getChildren().add(grid);
+        root.setRightAnchor(grid, 10.0);
+        root.setTopAnchor(grid, 10.0);
 
         root.getChildren().add(editor.getCanvas());
         root.setLeftAnchor(editor.getCanvas(), 10.0);

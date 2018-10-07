@@ -1,6 +1,7 @@
 package fauxpas.components;
 
 import fauxpas.collections.TileImageDirectory;
+import fauxpas.entities.Tile;
 import fauxpas.entities.World;
 import fauxpas.views.ScrollableWorldView;
 import javafx.animation.AnimationTimer;
@@ -9,10 +10,12 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class TileEditor {
+public class TileEditor implements PropertyChangeListener {
 
     private static final long TENTH_SECOND_IN_NANO = 100000000;
 
@@ -34,6 +37,7 @@ public class TileEditor {
     private int edgeInsetForScrollDetection;
 
     AtomicInteger frame;
+    private Tile tileBrush;
 
     public TileEditor(World world, TileImageDirectory assets, ScrollableWorldView view, Canvas canvas) {
         this.world = world;
@@ -100,6 +104,12 @@ public class TileEditor {
             browsedTileY = -1;
         });
 
+        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, (EventHandler<MouseEvent>) event ->{
+            if (this.tileBrush != null) {
+                world.setTile(this.view.getX()+browsedTileX, this.view.getY()+browsedTileY, this.tileBrush);
+            }
+        });
+
         scrollTimer = new AnimationTimer() {
             long last;
 
@@ -144,5 +154,12 @@ public class TileEditor {
 
     public Canvas getCanvas() {
         return canvas;
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent event) {
+        if (event.getPropertyName().equalsIgnoreCase("selectedTile")) {
+            this.tileBrush = (Tile) event.getNewValue();
+        }
     }
 }

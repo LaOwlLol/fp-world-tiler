@@ -1,11 +1,9 @@
 package fauxpas.components;
 
-import fauxpas.collections.TileImageDirectory;
 import fauxpas.entities.World;
 import fauxpas.views.MiniMapWorldView;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.paint.Color;
 
 public class EditorMiniMap {
 
