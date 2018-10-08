@@ -109,7 +109,7 @@ public class WorldTiler extends Application {
 
         //start animation
         this.editor.startRender();
-"world_1"
+
         root.getChildren().add(this.editor.getCanvas());
         root.setLeftAnchor(this.editor.getCanvas(), 10.0);
     }
