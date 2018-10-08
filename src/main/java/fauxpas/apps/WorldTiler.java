@@ -28,6 +28,8 @@ public class WorldTiler extends Application {
 
     private static final int VIEW_WIDTH_TILES = 8;
     private static final int VIEW_HEIGHT_TILES = 5;
+    private static final double MINIMAP_HEIGHT_PIXELS = 375.0;
+    private static final double MINIMAP_WIDTH_PIXALS = 600.0;
 
     private TileEditor editor;
     private EditorMiniMap miniMap;
@@ -35,78 +37,14 @@ public class WorldTiler extends Application {
 
     private Tile blank;
     private TileImageDirectory assets;
+    private int tile_dim;
+    private ScrollableWorldView scrollableView;
+    private Canvas scrollCanvas;
+    private World world;
+    private MiniMapWorldView miniMapView;
+    private Canvas miniMapCanvas;
 
     public WorldTiler() {
-
-        int tile_Dim = 75;
-
-        //define some tiles.
-        this.blank = new Tile("water",
-              Paths.get(System.getProperty("user.home"), "WorldTiler", "water", "water_0.png" ).toString());
-        Tile grass = new Tile ("grass",
-              Paths.get(System.getProperty("user.home"), "WorldTiler", "grass", "grass_0.png" ).toString());
-
-        //construct a new assets directory with dims matching local assets.
-        this.assets = TileImageDirectory.LoadFromFileSystem(Paths.get(System.getProperty("user.home"),
-              "WorldTiler").toString(), tile_Dim, true);
-
-        //map tiles to image assets.
-        /*assets.map(blank,
-                new Image( Paths.get(System.getProperty("user.home"),
-                      "WorldTiler", "water", "water_0.png" ).toUri().toString() )
-        );
-        assets.map(grass,
-              new Image( Paths.get(System.getProperty("user.home"),
-                    "WorldTiler", "grass", "grass_0.png" ).toUri().toString() )
-        );*/
-
-        World world;
-
-        world = World.ReadFromFile(
-              Paths.get(System.getProperty("user.home"), "WorldTiler", "world_1").toString()).orElseGet(
-              () -> {
-
-                  System.out.println("Failed to load world from file!");
-
-                  //construct a world with blank tile.
-                  World w = new World(300,300, this.blank);
-
-                  //set a tile to grass.
-                  w.setTile(1,0, grass);
-
-                  for (int j = 15; j < 25; ++j) {
-                      for (int i = 15; i < 25; ++i) {
-                          w.setTile(i, j, grass);
-                      }
-                  }
-                  return w;
-              }
-        );
-
-        //World.WriteToFile(world,  Paths.get(System.getProperty("user.home"), "WorldTiler", "world_1").toString() );
-
-        //construct a ScrollableWorldView for the TileEditor.
-        ScrollableWorldView scrollableView = new ScrollableWorldView(0,0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
-
-        //construct the Canvas that scrollableView will draw on.
-        Canvas scrollCanvas = new Canvas(tile_Dim*VIEW_WIDTH_TILES,tile_Dim*VIEW_HEIGHT_TILES);
-
-        //create the editor component
-        this.editor = new TileEditor(world, assets, scrollableView, scrollCanvas);
-
-        //construct a MiniMapWorldView for an over view of the world under construction.
-        MiniMapWorldView miniMapView = new MiniMapWorldView(0, 0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, world, assets);
-
-        //construct the Canvas that miniMapView will draw on.
-        Canvas miniMapCanvas = new Canvas(600, 375);
-
-        //register observer miniMapView to support in observable scrollableView.
-        scrollableView.registerChangeListener(miniMapView);
-        //turn on preview rendering of observed scrollView.
-        miniMapView.setTrackScrollView(true);
-
-        //construct the mini map component.
-        this.miniMap = new EditorMiniMap(world, miniMapView, miniMapCanvas);
 
     }
 
@@ -115,32 +53,128 @@ public class WorldTiler extends Application {
         primaryStage.setTitle("World-Tiler");
         AnchorPane root = new AnchorPane();
 
-        GridPane grid = new GridPane();
-        grid.setHgap(5);
-        grid.setVgap(5);
-        grid.setPadding(new Insets(5,5,5,5));
-        this.palette = new AssetPalette(grid, this.assets, this.blank);
-        this.palette.initLayout();
-        this.palette.registerChangeListener(this.editor);
+        setupAssets();
+        constructWorld();
 
-        root.getChildren().add(grid);
-        root.setRightAnchor(grid, 10.0);
-        root.setTopAnchor(grid, 10.0);
+        setupEditor(root);
+        setupMiniMap(root);
+        setupPalette(root);
 
-        root.getChildren().add(editor.getCanvas());
-        root.setLeftAnchor(editor.getCanvas(), 10.0);
-
-        this.editor.startRender();
-        this.editor.initEventHandlers();
-
-        root.getChildren().add(this.miniMap.getCanvas());
-        root.setLeftAnchor(this.miniMap.getCanvas(), 10.0);
-        root.setBottomAnchor(this.miniMap.getCanvas(), 10.0);
-
-        this.miniMap.startRender();
+        registerMiniMapViewToScrollViewUpdates();
+        registerScrollViewToPaletteUpdates();
 
         Scene scene = new Scene(root, 1024, 768);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
+
+    private void setupPalette(AnchorPane root) {
+        GridPane grid = new GridPane();
+        grid.setHgap(5);
+        grid.setVgap(5);
+        grid.setPadding(new Insets(5,5,5,5));
+
+        this.palette = new AssetPalette(grid, this.assets, this.blank);
+        this.palette.initLayout();
+
+        root.getChildren().add(grid);
+        root.setRightAnchor(grid, 10.0);
+        root.setTopAnchor(grid, 10.0);
+    }
+
+    private void setupAssets() {
+        this.tile_dim = 75;
+
+        //construct a new assets directory with dims matching local assets.
+        this.assets = TileImageDirectory.LoadFromFileSystem(Paths.get(System.getProperty("user.home"),
+              "WorldTiler").toString(), tile_dim, true);
+
+        //define some tiles.
+        this.blank = new Tile("water",
+              Paths.get(System.getProperty("user.home"), "WorldTiler", "water", "water_0.png" ).toString());
+    }
+
+    private void setupEditor(AnchorPane root) {
+        //construct a ScrollableWorldView for the TileEditor.
+        this.scrollableView = new ScrollableWorldView(0,0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, this.world, this.assets);
+
+        //construct the Canvas that scrollableView will draw on.
+        this.scrollCanvas = new Canvas(this.tile_dim *VIEW_WIDTH_TILES, this.tile_dim *VIEW_HEIGHT_TILES);
+
+        //create the editor component
+        this.editor = new TileEditor(this.world, this.assets, this.scrollableView, this.scrollCanvas);
+
+        //define handlers.
+        this.editor.initEventHandlers();
+
+        //start animation
+        this.editor.startRender();
+"world_1"
+        root.getChildren().add(this.editor.getCanvas());
+        root.setLeftAnchor(this.editor.getCanvas(), 10.0);
+    }
+
+
+    private void setupMiniMap(AnchorPane root) {
+        //construct a MiniMapWorldView for an over view of the world under construction.
+        this.miniMapView = new MiniMapWorldView(0, 0, VIEW_WIDTH_TILES, VIEW_HEIGHT_TILES, this.world, this.assets);
+
+        //construct the Canvas that miniMapView will draw on.
+        this.miniMapCanvas = new Canvas(MINIMAP_WIDTH_PIXALS, MINIMAP_HEIGHT_PIXELS);
+
+        //construct the mini map component.
+        this.miniMap = new EditorMiniMap(this.world, this.miniMapView, this.miniMapCanvas);
+
+        //start animation
+        this.miniMap.startRender();
+
+        root.getChildren().add(this.miniMap.getCanvas());
+        root.setLeftAnchor(this.miniMap.getCanvas(), 10.0);
+        root.setBottomAnchor(this.miniMap.getCanvas(), 10.0);
+    }
+
+    private void registerMiniMapViewToScrollViewUpdates() {
+        //register observer miniMapView to support in observable scrollableView.
+        this.scrollableView.registerChangeListener(this.miniMapView);
+        //turn on preview rendering of observed scrollView.
+        this.miniMapView.setTrackScrollView(true);
+    }
+
+    private void registerScrollViewToPaletteUpdates() {
+        //register observer editor to support observable palette
+        this.palette.registerChangeListener(this.editor);
+    }
+
+
+    private void constructWorld() {
+        //construct a by world loading from file or with blank tile.
+        this.world = World.ReadFromFile(
+              Paths.get(System.getProperty("user.home"), "WorldTiler", "world_1").toString()).orElseGet(() -> {
+
+                  System.out.println("Generating new World!");
+
+                  //construct a world with blank tile.
+                  //TODO we need a default map to load or a default title to use.
+                  World w = new World(300,300, this.blank);
+
+                  //make and island of grass.
+
+                  for (int j = 15; j < 25; ++j) {
+                      for (int i = 15; i < 25; ++i) {
+                          //TODO we need a default map to load or a default title to use.
+                          w.setTile(i, j,
+                                new Tile("grass", Paths.get(System.getProperty("user.home"),
+                                      "WorldTiler", "grass", "grass_0.png" ).toString()));
+                      }
+                  }
+                  return w;
+              }
+        );
+
+    }
+
+    private void saveWorld(String name) {
+        World.WriteToFile(this.world,  Paths.get(System.getProperty("user.home"), "WorldTiler", name).toString() );
+    }
+
 }
