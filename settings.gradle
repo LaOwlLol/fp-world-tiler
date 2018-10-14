@@ -18,4 +18,4 @@ include 'services:webservice'
 rootProject.name = 'fp-world-tiler'
 
 //https://stackoverflow.com/questions/18748436/is-it-possible-to-declare-git-repository-as-dependency-in-android-gradle
-include ':fp-world'
+include 'fp-world'

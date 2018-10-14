@@ -8,20 +8,27 @@ import fauxpas.entities.Tile;
 import fauxpas.entities.World;
 import fauxpas.views.MiniMapWorldView;
 import fauxpas.views.ScrollableWorldView;
-import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Button;
-import javafx.scene.image.Image;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.Scene;
 import javafx.scene.layout.GridPane;
-import javafx.scene.paint.Color;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import java.nio.file.Files;
+import java.io.File;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 
 public class WorldTiler extends Application {
@@ -53,19 +60,92 @@ public class WorldTiler extends Application {
         primaryStage.setTitle("World-Tiler");
         AnchorPane root = new AnchorPane();
 
-        setupAssets();
-        constructWorld();
+        Optional<String> result = CollectInitialParameters(primaryStage);
 
-        setupEditor(root);
-        setupMiniMap(root);
-        setupPalette(root);
+        result.ifPresent( (data) -> {
 
-        registerMiniMapViewToScrollViewUpdates();
-        registerScrollViewToPaletteUpdates();
+            setupAssets( Integer.parseInt(data.split(":")[2]), data.split(":")[0], data.split(":")[1] );
+            constructWorld();
 
-        Scene scene = new Scene(root, 1024, 768);
-        primaryStage.setScene(scene);
-        primaryStage.show();
+            setupEditor(root);
+            setupMiniMap(root);
+            setupPalette(root);
+
+            registerMiniMapViewToScrollViewUpdates();
+            registerScrollViewToPaletteUpdates();
+
+            Scene scene = new Scene(root, 1024, 768);
+            primaryStage.setScene(scene);
+            primaryStage.show();
+        } );
+
+
+    }
+
+    private Optional<String> CollectInitialParameters(Stage primaryStage) {
+        Dialog<String> setupInfoCollector = new Dialog<>();
+        GridPane infoCollectGrid = new GridPane();
+        infoCollectGrid.setHgap(10);
+        infoCollectGrid.setVgap(4);
+        infoCollectGrid.setPadding(new Insets(0, 10, 0, 10));
+
+
+        AtomicBoolean dirSelected = new AtomicBoolean(false);
+        Label assetsLabel = new Label("Assets Directory: ");
+        Button directorySelect = new Button("None");
+        directorySelect.setOnMouseClicked((event) -> {
+            DirectoryChooser assetsSelector = new DirectoryChooser();
+            assetsSelector.setTitle("Choose asset directory");
+            File assetsDir = assetsSelector.showDialog(primaryStage);
+            directorySelect.setText(assetsDir.toPath().toString());
+            dirSelected.set(true);
+        });
+
+        infoCollectGrid.add(assetsLabel, 1, 1);
+        GridPane.setHalignment(assetsLabel, HPos.LEFT);
+        infoCollectGrid.add(directorySelect, 2, 1, 18, 1);
+        GridPane.setHalignment(directorySelect, HPos.RIGHT);
+
+        AtomicBoolean blankSelected = new AtomicBoolean(false);
+        Label blankLabel = new Label("Blank tile: ");
+        Button blankSelect = new Button("None");
+        blankSelect.setOnMouseClicked((event) -> {
+            FileChooser assetsSelector = new FileChooser();
+            assetsSelector.setTitle("Choose blank tile");
+            File assetsDir = assetsSelector.showOpenDialog(primaryStage);
+            blankSelect.setText(assetsDir.toPath().toString());
+            blankSelected.set(true);
+        });
+
+        infoCollectGrid.add(blankLabel, 1, 3);
+        GridPane.setHalignment(blankLabel, HPos.LEFT);
+        infoCollectGrid.add(blankSelect, 2, 3, 18, 1);
+        GridPane.setHalignment(blankSelect, HPos.RIGHT);
+
+        AtomicBoolean dimSelected = new AtomicBoolean(false);
+        Label assetDims = new Label("Tile dimension: ");
+        ArrayList<Integer> options = new ArrayList<>();
+        IntStream.range(20, 76).filter(i ->  i%5 == 0 ).forEach(options::add);
+        ChoiceBox<Integer> dimOptions = new ChoiceBox(FXCollections.observableArrayList(options));
+        dimOptions.getSelectionModel().selectedItemProperty().addListener( (observable, oldVal, newVal) -> dimSelected.set(true)  );
+
+        infoCollectGrid.add(assetDims, 1, 5);
+        infoCollectGrid.add(dimOptions, 3, 5 );
+
+        ButtonType buttonTypeOk = new ButtonType("Okay", ButtonBar.ButtonData.OK_DONE);
+        setupInfoCollector.getDialogPane().getButtonTypes().add(buttonTypeOk);
+        setupInfoCollector.setResultConverter( buttonType -> {
+            if (buttonType == buttonTypeOk && dimSelected.get() && blankSelected.get() && dirSelected.get()) {
+                return directorySelect.getText()+":"+blankSelect.getText()+":"+dimOptions.getValue().toString();
+            }
+            else {
+                return null;
+            }
+        });
+
+        infoCollectGrid.autosize();
+        setupInfoCollector.getDialogPane().setContent(infoCollectGrid);
+        return setupInfoCollector.showAndWait();
     }
 
     private void setupPalette(AnchorPane root) {
@@ -82,16 +162,14 @@ public class WorldTiler extends Application {
         root.setTopAnchor(grid, 10.0);
     }
 
-    private void setupAssets() {
-        this.tile_dim = 75;
+    private void setupAssets(int assetsDim, String assetsPath, String blankTilePath) {
+        this.tile_dim = assetsDim;
 
         //construct a new assets directory with dims matching local assets.
-        this.assets = TileImageDirectory.LoadFromFileSystem(Paths.get(System.getProperty("user.home"),
-              "WorldTiler").toString(), tile_dim, true);
+        this.assets = TileImageDirectory.LoadFromFileSystem(assetsPath, tile_dim, true);
 
         //define some tiles.
-        this.blank = new Tile("water",
-              Paths.get(System.getProperty("user.home"), "WorldTiler", "water", "water_0.png" ).toString());
+        this.blank = new Tile("water", blankTilePath);
     }
 
     private void setupEditor(AnchorPane root) {

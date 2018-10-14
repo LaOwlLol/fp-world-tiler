@@ -24,10 +24,29 @@ dependencies {
     compile 'com.google.guava:guava:23.0'
 
     compile project(':fp-world')
+    compile files(fileTree(dir: 'lib', includes: ['*.jar']))
 
     // Use JUnit test framework
     testCompile 'junit:junit:4.12'
 }
+
+
+jar {
+    from configurations.runtime.collect { zipTree(it) }
+
+    manifest {
+        attributes(
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version'),
+                'Built-Gradle': gradle.gradleVersion,
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'fauxpas.apps.WorldTiler'
+        )
+    }
+
+}
+
 
 // Define the main class for the application
 mainClassName = 'fauxpas.apps.WorldTiler'
