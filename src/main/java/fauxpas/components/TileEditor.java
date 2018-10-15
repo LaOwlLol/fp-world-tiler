@@ -5,7 +5,6 @@ import fauxpas.entities.Tile;
 import fauxpas.entities.World;
 import fauxpas.views.ScrollableWorldView;
 import javafx.animation.AnimationTimer;
-import javafx.event.EventHandler;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
@@ -33,10 +32,10 @@ public class TileEditor implements PropertyChangeListener {
     private int scrollModX;
     private int scrollModY;
 
-    double smoothScrollFactor;
+    private double smoothScrollFactor;
     private int edgeInsetForScrollDetection;
 
-    AtomicInteger frame;
+    private AtomicInteger frame;
     private Tile tileBrush;
 
     public TileEditor(World world, TileImageDirectory assets, ScrollableWorldView view, Canvas canvas) {
@@ -92,19 +91,19 @@ public class TileEditor implements PropertyChangeListener {
     }
 
     public void initEventHandlers() {
-        canvas.addEventHandler(MouseEvent.MOUSE_MOVED, (EventHandler<MouseEvent>) event -> {
+        canvas.addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
 
             UpdateFocusedTile(event);
             UpdateViewScroll(event);
 
         });
 
-        canvas.addEventHandler(MouseEvent.MOUSE_EXITED, (EventHandler<MouseEvent>) event ->{
+        canvas.addEventHandler(MouseEvent.MOUSE_EXITED, event ->{
             browsedTileX = -1;
             browsedTileY = -1;
         });
 
-        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, (EventHandler<MouseEvent>) event ->{
+        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, event ->{
             if (this.tileBrush != null) {
                 world.setTile(this.view.getX()+browsedTileX, this.view.getY()+browsedTileY, this.tileBrush);
             }

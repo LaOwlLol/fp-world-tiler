@@ -2,7 +2,6 @@ package fauxpas.components;
 
 import fauxpas.collections.TileImageDirectory;
 import fauxpas.entities.Tile;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -31,20 +30,16 @@ public class AssetPalette {
 
     public void initLayout() {
         AtomicInteger i = new AtomicInteger();
-        assets.getKeys().forEach( tile -> {
-            assets.get(tile).ifPresent( img -> {
-                ImageView imgView = new ImageView(img);
-                imgView.setPreserveRatio(true);
-                imgView.setFitWidth(25.0);
-                imgView.setFitHeight(25.0);
-                Button b = new Button("", imgView);
-                b.setOnMouseClicked(event -> {
-                    selectTileAsset(tile);
-                });
-                i.getAndIncrement();
-                grid.add(b, i.get()%2, i.get()/2);
-            });
-        });
+        assets.getKeys().forEach( tile -> assets.get(tile).ifPresent(img -> {
+            ImageView imgView = new ImageView(img);
+            imgView.setPreserveRatio(true);
+            imgView.setFitWidth(25.0);
+            imgView.setFitHeight(25.0);
+            Button b = new Button("", imgView);
+            b.setOnMouseClicked(event -> selectTileAsset(tile));
+            i.getAndIncrement();
+            grid.add(b, i.get()%2, i.get()/2);
+        }));
     }
 
     public GridPane getGrid() {
