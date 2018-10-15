@@ -8,8 +8,8 @@ import fauxpas.entities.Tile;
 import fauxpas.entities.World;
 import fauxpas.views.MiniMapWorldView;
 import fauxpas.views.ScrollableWorldView;
+
 import javafx.application.Application;
-import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.canvas.Canvas;
@@ -20,11 +20,9 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
@@ -61,7 +59,6 @@ public class WorldTiler extends Application {
     }
 
     private void InitWorldTiler(Stage primaryStage) {
-
         primaryStage.setTitle("World-Tiler");
         AnchorPane root = new AnchorPane();
 
@@ -82,12 +79,10 @@ public class WorldTiler extends Application {
             else {
                 Optional<String> tileResults = CollectTileDefaults(primaryStage);
 
-                tileResults.ifPresent( tileData -> {
-                    setupAssets(Integer.parseInt(worldData.split(":")[1]),
-                          worldData.split(":")[0],
-                          tileData.split(":")[0],
-                          tileData.split(":")[1]);
-                });
+                tileResults.ifPresent( tileData -> setupAssets(Integer.parseInt(worldData.split(":")[1]),
+                      worldData.split(":")[0],
+                      tileData.split(":")[0],
+                      tileData.split(":")[1]));
             }
 
             if (this.assets != null && this.primaryTile != null && this.secondaryTile != null) {
@@ -148,9 +143,8 @@ public class WorldTiler extends Application {
 
         AtomicBoolean dimSelected = new AtomicBoolean(false);
         Label assetDims = new Label("Tile dimension: ");
-        ArrayList<Integer> options = new ArrayList<>();
-        IntStream.range(20, 76).filter(i ->  i%5 == 0 ).forEach(options::add);
-        ChoiceBox<Integer> dimOptions = new ChoiceBox(FXCollections.observableArrayList(options));
+        ChoiceBox<Integer> dimOptions = new ChoiceBox<>();
+        IntStream.range(20, 76).filter(i ->  i%5 == 0 ).forEach(dimOptions.getItems()::add);
         dimOptions.getSelectionModel().selectedItemProperty().addListener(
               (observable, oldVal, newVal) -> dimSelected.set(true));
 
@@ -164,7 +158,6 @@ public class WorldTiler extends Application {
                 return directorySelect.getText()+":"+
                       dimOptions.getValue().toString()+":"+
                       worldSelect.getText();
-
             }
             else {
                 return null;
@@ -242,8 +235,8 @@ public class WorldTiler extends Application {
         this.palette.initLayout();
 
         root.getChildren().add(grid);
-        root.setRightAnchor(grid, 10.0);
-        root.setTopAnchor(grid, 10.0);
+        AnchorPane.setRightAnchor(grid, 10.0);
+        AnchorPane.setTopAnchor(grid, 10.0);
     }
 
     private void setupAssets(int assetsDim, String assetsPath, String primaryTilePath, String secondaryTilePath) {
@@ -274,7 +267,7 @@ public class WorldTiler extends Application {
         this.editor.startRender();
 
         root.getChildren().add(this.editor.getCanvas());
-        root.setLeftAnchor(this.editor.getCanvas(), 10.0);
+        AnchorPane.setLeftAnchor(this.editor.getCanvas(), 10.0);
     }
 
     private void setupMiniMap(AnchorPane root) {
@@ -291,8 +284,8 @@ public class WorldTiler extends Application {
         this.miniMap.startRender();
 
         root.getChildren().add(this.miniMap.getCanvas());
-        root.setLeftAnchor(this.miniMap.getCanvas(), 10.0);
-        root.setBottomAnchor(this.miniMap.getCanvas(), 10.0);
+        AnchorPane.setLeftAnchor(this.miniMap.getCanvas(), 10.0);
+        AnchorPane.setBottomAnchor(this.miniMap.getCanvas(), 10.0);
     }
 
     private void registerMiniMapViewToScrollViewUpdates() {
