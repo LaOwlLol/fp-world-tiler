@@ -66,28 +66,28 @@ public class WorldTiler extends Application {
 
         dirResult.ifPresent( (worldData) -> {
 
-            if (Files.exists(Paths.get(worldData.split(":")[0], "water", "water_0.png")) &&
-                  Files.exists(Paths.get(worldData.split(":")[0], "grass", "grass_0.png"))) {
+            if (Files.exists(Paths.get(worldData.split(";")[0], "water", "water_0.png")) &&
+                  Files.exists(Paths.get(worldData.split(";")[0], "grass", "grass_0.png"))) {
 
-                setupAssets(Integer.parseInt(worldData.split(":")[1]),
-                      worldData.split(":")[0],
-                      Paths.get(worldData.split(":")[0], "water", "water_0.png").toString(),
-                      Paths.get(worldData.split(":")[0], "grass", "grass_0.png").toString());
+                setupAssets(Integer.parseInt(worldData.split(";")[1]),
+                      worldData.split(";")[0],
+                      Paths.get(worldData.split(";")[0], "water", "water_0.png").toString(),
+                      Paths.get(worldData.split(";")[0], "grass", "grass_0.png").toString());
 
 
             }
             else {
                 Optional<String> tileResults = CollectTileDefaults(primaryStage);
 
-                tileResults.ifPresent( tileData -> setupAssets(Integer.parseInt(worldData.split(":")[1]),
-                      worldData.split(":")[0],
-                      tileData.split(":")[0],
-                      tileData.split(":")[1]));
+                tileResults.ifPresent( tileData -> setupAssets(Integer.parseInt(worldData.split(";")[1]),
+                      worldData.split(";")[0],
+                      tileData.split(";")[0],
+                      tileData.split(";")[1]));
             }
 
             if (this.assets != null && this.primaryTile != null && this.secondaryTile != null) {
 
-                constructWorld( worldData.split(":")[2] );
+                constructWorld( worldData.split(";")[2] );
 
                 setupEditor(root);
                 setupMiniMap(root);
@@ -155,8 +155,8 @@ public class WorldTiler extends Application {
         setupInfoCollector.getDialogPane().getButtonTypes().add(buttonTypeOk);
         setupInfoCollector.setResultConverter( buttonType -> {
             if (buttonType == buttonTypeOk && dimSelected.get() && dirSelected.get()) {
-                return directorySelect.getText()+":"+
-                      dimOptions.getValue().toString()+":"+
+                return directorySelect.getText()+";"+
+                      dimOptions.getValue().toString()+";"+
                       worldSelect.getText();
             }
             else {
@@ -213,7 +213,7 @@ public class WorldTiler extends Application {
         setupInfoCollector.getDialogPane().getButtonTypes().add(buttonTypeOk);
         setupInfoCollector.setResultConverter( buttonType -> {
             if (buttonType == buttonTypeOk && waterSelected.get() && grassSelected.get()) {
-                return waterSelect.getText()+":"+grassSelect.getText();
+                return waterSelect.getText()+";"+grassSelect.getText();
             }
             else {
                 return null;
