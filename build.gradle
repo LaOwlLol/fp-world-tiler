@@ -30,6 +30,13 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
+task depth (type: JavaExec) {
+    main = 'fauxpas.apps.Depth'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+// Define the main class for the application
+mainClassName = 'fauxpas.apps.WorldTiler'
 
 jar {
     from configurations.runtime.collect { zipTree(it) }
@@ -48,5 +55,7 @@ jar {
 }
 
 
-// Define the main class for the application
-mainClassName = 'fauxpas.apps.WorldTiler'
+
+
+
+
