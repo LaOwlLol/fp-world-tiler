@@ -13,6 +13,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.nio.file.Paths;
+import java.util.Random;
 
 public class Depth extends Application {
 
@@ -22,16 +23,16 @@ public class Depth extends Application {
 
         root.setOrientation(Orientation.VERTICAL);
 
-        DepthMap depth = new DepthMap(new Image(Paths.get(System.getProperty("user.home"),
-              "WorldTiler", "Height.png").toUri().toString()));
+        DepthMap depth = new DepthMap(800, 600);
 
         ImageView view = new ImageView(depth.getImage());
         root.getChildren().add(view);
 
         Button filter = new Button("filter");
         filter.setOnMouseClicked((event) -> {
-            depth.applyFilter(new GaussianBlur(3, 5));
+            depth.applyFilter(new GaussianBlur(3, 3));
             view.setImage(depth.getImage());
+
         });
         root.getChildren().add(filter);
 
