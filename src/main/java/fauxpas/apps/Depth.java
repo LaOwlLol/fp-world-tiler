@@ -6,9 +6,13 @@ import javafx.application.Application;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import java.io.File;
 
 
 public class Depth extends Application {
@@ -26,14 +30,6 @@ public class Depth extends Application {
         FlowPane buttonBar = new FlowPane();
         buttonBar.setOrientation(Orientation.HORIZONTAL);
 
-        Button filter = new Button("Filter");
-        filter.setOnMouseClicked((event) -> {
-            depth.applyFilter(new GaussianBlur(3, 3));
-            view.setImage(depth.getImage());
-
-        });
-        buttonBar.getChildren().add(filter);
-
         Button generate = new Button("Generate");
         generate.setOnMouseClicked((event) -> {
             depth.applyFilter(new PerlinNoise());
@@ -41,8 +37,19 @@ public class Depth extends Application {
         });
         buttonBar.getChildren().add(generate);
 
-        Button blend = new Button("Blend");
-        blend.setOnMouseClicked((event) -> {
+        Button blendWithNoise = new Button("Blend Noise");
+        blendWithNoise.setOnMouseClicked((event) -> {
+            depth.applyFilter( new SumFilter(1.0, 0.25).apply(
+                    new BlendFilter().apply(new RedistributionFilter(1.0), new SimplexNoise(2) ),
+                    new WhiteNoise()
+            ));
+            depth.applyFilter(new RedistributionFilter(1.3 ));
+            view.setImage(depth.getImage());
+        });
+        buttonBar.getChildren().add(blendWithNoise);
+
+        Button sumWithNoise = new Button("Sum Noise");
+        sumWithNoise.setOnMouseClicked((event) -> {
             depth.applyFilter( new SumFilter(1.0, 0.25).apply(
                   new SumFilter(1, 0.5).apply(new RedistributionFilter(1.0), new SimplexNoise(2) ),
                   new WhiteNoise()
@@ -50,14 +57,31 @@ public class Depth extends Application {
             depth.applyFilter(new RedistributionFilter(1.3 ));
             view.setImage(depth.getImage());
         });
-        buttonBar.getChildren().add(blend);
+        buttonBar.getChildren().add(sumWithNoise);
 
-        Button redistribute = new Button("Flatten");
+        Button blur = new Button("Blur");
+        blur.setOnMouseClicked((event) -> {
+            depth.applyFilter(new GaussianBlur(3, 3));
+            view.setImage(depth.getImage());
+
+        });
+        buttonBar.getChildren().add(blur);
+
+        Button redistribute = new Button("Smooth");
         redistribute.setOnMouseClicked((event) -> {
             depth.applyFilter(new RedistributionFilter(1.3 ));
             view.setImage(depth.getImage());
         });
         buttonBar.getChildren().add(redistribute);
+
+        Button selectImage = new Button("Load Image");
+        selectImage.setOnMouseClicked((event) -> {
+            FileChooser fileChooser = new FileChooser();
+            File file =  fileChooser.showOpenDialog(primaryStage);
+            depth.setImage(new Image(file.toURI().toString()));
+            view.setImage(depth.getImage());
+        });
+        buttonBar.getChildren().addAll(selectImage);
 
         root.getChildren().add(buttonBar);
         Scene scene = new Scene(root, depth.getImage().getWidth(), depth.getImage().getHeight()+35);
