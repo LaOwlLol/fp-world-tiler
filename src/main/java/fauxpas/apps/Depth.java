@@ -6,15 +6,10 @@ import javafx.application.Application;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-import java.nio.file.Paths;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Depth extends Application {
 
@@ -38,8 +33,6 @@ public class Depth extends Application {
 
         });
         buttonBar.getChildren().add(filter);
-
-        //AtomicInteger freq = new AtomicInteger(2);
 
         Button generate = new Button("Generate");
         generate.setOnMouseClicked((event) -> {
@@ -72,6 +65,7 @@ public class Depth extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
     }
+
     public static void main(String[] args) {
         launch(args);
     }
