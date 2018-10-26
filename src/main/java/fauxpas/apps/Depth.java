@@ -39,7 +39,7 @@ public class Depth extends Application {
 
         Button blendWithNoise = new Button("Blend Noise");
         blendWithNoise.setOnMouseClicked((event) -> {
-            depth.applyFilter( new SumFilter(1.0, 0.25).apply(
+            depth.applyFilter( new SumFilter(1.0, 0.1).apply(
                     new BlendFilter().apply(new RedistributionFilter(1.0), new SimplexNoise(2) ),
                     new WhiteNoise()
             ));
