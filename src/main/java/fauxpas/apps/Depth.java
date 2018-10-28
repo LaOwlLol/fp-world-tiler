@@ -66,6 +66,16 @@ public class Depth extends Application {
         buttonBar.getChildren().add(sumWithNoise);
         buttonBar.setMargin( sumWithNoise, new Insets(5, 5, 5, 5));
 
+        Button edge = new Button("Edges");
+        edge.setOnMouseClicked((event) -> {
+            depth.applyFilter(new SobelFilter());
+            view.setImage(depth.getImage());
+
+        });
+        buttonBar.getChildren().add(edge);
+        buttonBar.setMargin( edge, new Insets(5, 5, 5, 5));
+
+
         Button blur = new Button("Blur");
         blur.setOnMouseClicked((event) -> {
             depth.applyFilter(new GaussianBlur(3, 3));
@@ -74,6 +84,7 @@ public class Depth extends Application {
         });
         buttonBar.getChildren().add(blur);
         buttonBar.setMargin( blur, new Insets(5, 5, 5, 5));
+
 
         Button redistribute = new Button("Smooth");
         redistribute.setOnMouseClicked((event) -> {
