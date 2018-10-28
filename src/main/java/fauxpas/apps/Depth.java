@@ -5,14 +5,16 @@ import fauxpas.filters.*;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.*;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
+import org.apache.commons.io.FilenameUtils;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -22,16 +24,24 @@ public class Depth extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        FlowPane root = new FlowPane();
-        root.setOrientation(Orientation.HORIZONTAL);
+        VBox root = new VBox();
+
+        Scene scene = new Scene(root);
+        primaryStage.setScene(scene);
 
         DepthMap depth = new DepthMap(800, 600);
 
         ImageView view = new ImageView(depth.getImage());
+        view.setPreserveRatio(true);
         root.getChildren().add(view);
 
-
         HBox buttonBar = new HBox();
+
+        //primaryStage.minWidthProperty().bind(view.fitWidthProperty());
+        //primaryStage.minHeightProperty().bind(root.heightProperty());
+
+        //primaryStage.maxWidthProperty().bind(view.fitWidthProperty());
+        //primaryStage.maxHeightProperty().bind(root.heightProperty());
 
         Button generate = new Button("Generate");
         generate.setOnMouseClicked((event) -> {
@@ -65,6 +75,16 @@ public class Depth extends Application {
         });
         buttonBar.getChildren().add(sumWithNoise);
         buttonBar.setMargin( sumWithNoise, new Insets(5, 5, 5, 5));
+
+        Button gray = new Button("Grayscale");
+        gray.setOnMouseClicked((event) -> {
+            depth.applyFilter(new GrayscaleFilter());
+            view.setImage(depth.getImage());
+
+        });
+        buttonBar.getChildren().add(gray);
+        buttonBar.setMargin( gray, new Insets(5, 5, 5, 5));
+
 
         Button edge = new Button("Edges");
         edge.setOnMouseClicked((event) -> {
@@ -101,6 +121,17 @@ public class Depth extends Application {
             if (file != null) {
                 depth.setImage(new Image(file.toURI().toString()));
                 view.setImage(depth.getImage());
+                if (depth.getImage().getHeight() > Screen.getPrimary().getVisualBounds().getHeight()) {
+                    view.setFitHeight(Screen.getPrimary().getVisualBounds().getHeight() - buttonBar.getHeight());
+
+                }
+                else {
+                    view.setFitHeight(depth.getImage().getHeight() );
+
+                }
+                /*primaryStage.setWidth(Math.max( view.getFitWidth(), buttonBar.getWidth() ));
+                primaryStage.setHeight(root.getHeight());
+                primaryStage.sizeToScene();*/
             }
         });
         buttonBar.getChildren().addAll(selectImage);
@@ -116,18 +147,25 @@ public class Depth extends Application {
             if (file != null) {
                 writeImageToFile(depth.getImage(), file);
             }
+            else {
+                System.out.println("File selection for save image returned null!");
+            }
         });
         buttonBar.getChildren().addAll(saveImage);
         buttonBar.setMargin( saveImage, new Insets(5, 5, 5, 5));
 
+
         root.getChildren().add(buttonBar);
-        Scene scene = new Scene(root);
-        primaryStage.setScene(scene);
-        primaryStage.minWidthProperty().bind(root.widthProperty());
-        primaryStage.minWidthProperty().bind(root.heightProperty());
+
+        //primaryStage.minWidthProperty().bind(root.widthProperty());
+        //primaryStage.minWidthProperty().bind(root.heightProperty());
         primaryStage.setTitle("Depth visual test");
-        primaryStage.setScene(scene);
+        primaryStage.sizeToScene();
         primaryStage.show();
+
+        buttonBar.setMaxSize(buttonBar.getWidth(), buttonBar.getHeight());
+        buttonBar.setPrefSize(buttonBar.getWidth(), buttonBar.getHeight());
+        buttonBar.setMinSize(buttonBar.getWidth(), buttonBar.getHeight());
     }
 
     public static void main(String[] args) {
@@ -135,14 +173,7 @@ public class Depth extends Application {
     }
 
     public void writeImageToFile(Image img, File file) {
-        String extension = "";
-
-        int i = file.getName().lastIndexOf('.');
-        int p = Math.max(file.getName().lastIndexOf('/'), file.getName().lastIndexOf('\\'));
-
-        if (i > p) {
-            extension = file.getName().substring(i+1);
-        }
+        String extension = FilenameUtils.getExtension(file.getPath());
 
         try {
             ImageIO.write(SwingFXUtils.fromFXImage(img, null), extension, file);

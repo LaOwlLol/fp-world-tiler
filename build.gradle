@@ -26,6 +26,9 @@ dependencies {
     compile project(':fp-world')
     compile files(fileTree(dir: 'lib', includes: ['*.jar']))
 
+    // https:\/\/mvnrepository.com\/artifact\/commons-io\/commons-io
+    compile group: 'commons-io', name: 'commons-io', version: '2.5'
+
     // Use JUnit test framework
     testCompile 'junit:junit:4.12'
 }
