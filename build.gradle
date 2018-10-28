@@ -24,6 +24,9 @@ dependencies {
     compile 'com.google.guava:guava:23.0'
 
     compile project(':fp-world')
+
+    compile project(':fp-image')
+
     compile files(fileTree(dir: 'lib', includes: ['*.jar']))
 
     // https:\/\/mvnrepository.com\/artifact\/commons-io\/commons-io

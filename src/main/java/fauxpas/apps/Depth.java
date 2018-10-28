@@ -1,6 +1,6 @@
 package fauxpas.apps;
 
-import fauxpas.entities.DepthMap;
+import fauxpas.entities.FilterableImage;
 import fauxpas.filters.*;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
@@ -29,7 +29,7 @@ public class Depth extends Application {
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
 
-        DepthMap depth = new DepthMap(800, 600);
+        FilterableImage depth = new FilterableImage (800, 600);
 
         ImageView view = new ImageView(depth.getImage());
         view.setPreserveRatio(true);
