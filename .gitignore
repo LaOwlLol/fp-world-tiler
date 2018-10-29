@@ -1,6 +1,8 @@
 .gradle
 /build/
 .idea/
+fp-world
+fp-image
 
 
 # Ignore Gradle GUI config
