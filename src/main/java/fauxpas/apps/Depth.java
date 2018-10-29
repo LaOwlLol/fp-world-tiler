@@ -88,7 +88,7 @@ public class Depth extends Application {
 
         Button edge = new Button("Edges");
         edge.setOnMouseClicked((event) -> {
-            depth.applyFilter(new SobelFilter());
+            depth.applyFilter(new SobelFilter(0.1));
             view.setImage(depth.getImage());
 
         });
@@ -98,7 +98,7 @@ public class Depth extends Application {
 
         Button blur = new Button("Blur");
         blur.setOnMouseClicked((event) -> {
-            depth.applyFilter(new GaussianBlur(3, 3));
+            depth.applyFilter(new GaussianBlur(3, 10));
             view.setImage(depth.getImage());
 
         });
@@ -108,7 +108,7 @@ public class Depth extends Application {
 
         Button redistribute = new Button("Smooth");
         redistribute.setOnMouseClicked((event) -> {
-            depth.applyFilter(new RedistributionFilter(1.3 ));
+            depth.applyFilter(new RedistributionFilter(2));
             view.setImage(depth.getImage());
         });
         buttonBar.getChildren().add(redistribute);
