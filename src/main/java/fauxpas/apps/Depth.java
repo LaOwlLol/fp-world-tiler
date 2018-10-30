@@ -5,6 +5,7 @@ import fauxpas.filters.*;
 import fauxpas.filters.noise.CellularNoise;
 import fauxpas.filters.noise.PerlinNoise;
 import fauxpas.filters.noise.SimplexFractalNoise;
+import fauxpas.filters.noise.ValueNoise;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
@@ -50,7 +51,7 @@ public class Depth extends Application {
         generate.setOnMouseClicked((event) -> {
             Thread process = new Thread(() -> {
                 buttonBar.setDisable(true);
-                depth.applyFilter(new SimplexFractalNoise(1.25f));
+                depth.applyFilter(new ValueNoise(1.25f));
                 view.setImage(depth.getImage());
                 buttonBar.setDisable(false);
             });
