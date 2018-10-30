@@ -113,7 +113,8 @@ public class Depth extends Application {
         edge.setOnMouseClicked((event) -> {
             Thread process = new Thread(() -> {
                 buttonBar.setDisable(true);
-                depth.applyFilter(new SobelFilter(0.005));
+                depth.applyFilter(new SobelFilter(0.07));
+                depth.applyFilter(new CannyFilter());
                 view.setImage(depth.getImage());
                 buttonBar.setDisable(false);
             });
