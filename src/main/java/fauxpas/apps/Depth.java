@@ -2,6 +2,9 @@ package fauxpas.apps;
 
 import fauxpas.entities.FilterableImage;
 import fauxpas.filters.*;
+import fauxpas.filters.noise.CellularNoise;
+import fauxpas.filters.noise.PerlinNoise;
+import fauxpas.filters.noise.SimplexFractalNoise;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
@@ -47,23 +50,23 @@ public class Depth extends Application {
         generate.setOnMouseClicked((event) -> {
             Thread process = new Thread(() -> {
                 buttonBar.setDisable(true);
-                depth.applyFilter(new PerlinNoise());
+                depth.applyFilter(new SimplexFractalNoise(1.25f));
                 view.setImage(depth.getImage());
                 buttonBar.setDisable(false);
             });
             process.start();
         });
         buttonBar.getChildren().add(generate);
-        buttonBar.setMargin( generate, new Insets(5, 5, 5, 5));
+        HBox.setMargin( generate, new Insets(5, 5, 5, 5));
 
 
         Button blendWithNoise = new Button("Blend Noise");
         blendWithNoise.setOnMouseClicked((event) -> {
             Thread process = new Thread(() -> {
                 buttonBar.setDisable(true);
-                depth.applyFilter( new SumFilter(1.0, 0.1).apply(
-                        new BlendFilter().apply(new RedistributionFilter(1.0), new SimplexNoise(2) ),
-                        new WhiteNoise()
+                depth.applyFilter( new BlendFilter().apply(
+                        new BlendFilter().apply(new RedistributionFilter(1.0), new PerlinNoise() ),
+                      new CellularNoise(8)
                 ));
                 depth.applyFilter(new RedistributionFilter(1.3 ));
                 view.setImage(depth.getImage());
@@ -72,15 +75,15 @@ public class Depth extends Application {
             process.start();
         });
         buttonBar.getChildren().add(blendWithNoise);
-        buttonBar.setMargin( blendWithNoise, new Insets(5, 5, 5, 5));
+        HBox.setMargin( blendWithNoise, new Insets(5, 5, 5, 5));
 
         Button sumWithNoise = new Button("Sum Noise");
         sumWithNoise.setOnMouseClicked((event) -> {
             Thread process = new Thread(() -> {
                 buttonBar.setDisable(true);
                 depth.applyFilter( new SumFilter(1.0, 0.25).apply(
-                      new SumFilter(1, 0.5).apply(new RedistributionFilter(1.0), new SimplexNoise(2) ),
-                      new WhiteNoise()
+                      new SumFilter(.75, 0.5).apply(new RedistributionFilter(1.0), new PerlinNoise() ),
+                      new CellularNoise(8)
                 ));
                 depth.applyFilter(new RedistributionFilter(1.3 ));
                 view.setImage(depth.getImage());
@@ -89,7 +92,7 @@ public class Depth extends Application {
             process.start();
         });
         buttonBar.getChildren().add(sumWithNoise);
-        buttonBar.setMargin( sumWithNoise, new Insets(5, 5, 5, 5));
+        HBox.setMargin( sumWithNoise, new Insets(5, 5, 5, 5));
 
         Button gray = new Button("Grayscale");
         gray.setOnMouseClicked((event) -> {
@@ -102,21 +105,21 @@ public class Depth extends Application {
             process.start();
         });
         buttonBar.getChildren().add(gray);
-        buttonBar.setMargin( gray, new Insets(5, 5, 5, 5));
+        HBox.setMargin( gray, new Insets(5, 5, 5, 5));
 
 
         Button edge = new Button("Edges");
         edge.setOnMouseClicked((event) -> {
             Thread process = new Thread(() -> {
                 buttonBar.setDisable(true);
-                depth.applyFilter(new SobelFilter(0.05));
+                depth.applyFilter(new SobelFilter(0.005));
                 view.setImage(depth.getImage());
                 buttonBar.setDisable(false);
             });
             process.start();
         });
         buttonBar.getChildren().add(edge);
-        buttonBar.setMargin( edge, new Insets(5, 5, 5, 5));
+        HBox.setMargin( edge, new Insets(5, 5, 5, 5));
 
 
         Button blur = new Button("Blur");
@@ -130,7 +133,7 @@ public class Depth extends Application {
             process.start();
         });
         buttonBar.getChildren().add(blur);
-        buttonBar.setMargin( blur, new Insets(5, 5, 5, 5));
+        HBox.setMargin( blur, new Insets(5, 5, 5, 5));
 
 
         Button redistribute = new Button("Smooth");
@@ -144,7 +147,7 @@ public class Depth extends Application {
             process.start();
         });
         buttonBar.getChildren().add(redistribute);
-        buttonBar.setMargin( redistribute, new Insets(5, 5, 5, 5));
+        HBox.setMargin( redistribute, new Insets(5, 5, 5, 5));
 
         Button selectImage = new Button("Load Image");
         selectImage.setOnMouseClicked((event) -> {
@@ -164,7 +167,7 @@ public class Depth extends Application {
             buttonBar.setDisable(false);
         });
         buttonBar.getChildren().addAll(selectImage);
-        buttonBar.setMargin( selectImage, new Insets(5, 5, 5, 5));
+        HBox.setMargin( selectImage, new Insets(5, 5, 5, 5));
 
         Button saveImage = new Button("Save Image");
         saveImage.setOnMouseClicked((event) -> {
@@ -183,7 +186,7 @@ public class Depth extends Application {
             buttonBar.setDisable(false);
         });
         buttonBar.getChildren().addAll(saveImage);
-        buttonBar.setMargin( saveImage, new Insets(5, 5, 5, 5));
+        HBox.setMargin( saveImage, new Insets(5, 5, 5, 5));
 
 
         root.getChildren().add(buttonBar);
@@ -203,7 +206,7 @@ public class Depth extends Application {
         launch(args);
     }
 
-    public void writeImageToFile(Image img, File file) {
+    private void writeImageToFile(Image img, File file) {
         String extension = FilenameUtils.getExtension(file.getPath());
 
         try {
