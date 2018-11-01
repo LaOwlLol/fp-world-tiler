@@ -136,8 +136,10 @@ public class Depth extends Application {
                 buttonBar.setDisable(true);
                 lastImage = depth.getImage();
                 last.setDisable(false);
+                long t = System.currentTimeMillis();
                 depth.applyFilter(new GaussianBlur(3,10));
-                depth.applyFilter(new SobelFilter(0.07));
+                depth.applyFilter(new SobelFilter(0.0));
+                System.out.println("Sobel processed in : " + (System.currentTimeMillis() - t) + " milliseconds.");
                 view.setImage(depth.getImage());
                 buttonBar.setDisable(false);
             });
