@@ -153,7 +153,9 @@ public class Depth extends Application {
                 buttonBar.setDisable(true);
                 lastImage = depth.getImage();
                 last.setDisable(false);
+                long t = System.currentTimeMillis();
                 depth.applyFilter(new GaussianBlur(3, 10));
+                System.out.println("Blur processed in : " + (System.currentTimeMillis() - t) + " milliseconds.");
                 view.setImage(depth.getImage());
                 buttonBar.setDisable(false);
             });
