@@ -121,7 +121,9 @@ public class Depth extends Application {
                 last.setDisable(false);
                 depth.applyFilter(new GaussianBlur(3,10));
                 depth.applyFilter(new SobelFilter(0.00001));
+                long t = System.currentTimeMillis();
                 depth.applyFilter(new CannyFilter());
+                System.out.println("Canny (only) processed in : " + (System.currentTimeMillis() - t) + " milliseconds.");
                 view.setImage(depth.getImage());
                 buttonBar.setDisable(false);
             });
