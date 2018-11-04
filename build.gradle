@@ -36,16 +36,16 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-task depth (type: JavaExec) {
-    main = 'fauxpas.apps.Depth'
+task depth(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
+    main = 'fauxpas.apps.Depth'
 }
 
-// Define the main class for the application
-mainClassName = 'fauxpas.apps.WorldTiler'
-
-jar {
+task tilerJar(type: Jar) {
     from configurations.runtime.collect { zipTree(it) }
+    from sourceSets.main.output
+
+    baseName = 'Tiler'
 
     manifest {
         attributes(
@@ -57,10 +57,32 @@ jar {
                 'Main-Class': 'fauxpas.apps.WorldTiler'
         )
     }
-
 }
 
+task depthJar(type: Jar) {
+    from configurations.runtime.collect { zipTree(it) }
+    from sourceSets.main.output
 
+    baseName = 'Depth'
+
+    manifest {
+        attributes(
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version'),
+                'Built-Gradle': gradle.gradleVersion,
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'fauxpas.apps.Depth'
+        )
+    }
+}
+
+artifacts {
+    archives tilerJar,  depthJar
+}
+
+// Define the main class for the application
+mainClassName = 'fauxpas.apps.WorldTiler'
 
 
 
