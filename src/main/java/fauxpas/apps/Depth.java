@@ -67,7 +67,7 @@ public class Depth extends Application {
                 lastImage = depth.getImage();
                 last.setDisable(false);
                 depth.applyFilter( new BlendFilter().apply(
-                        new BlendFilter().apply(new RedistributionFilter(1.0), new PerlinNoise() ),
+                        new BlendFilter().apply( image -> image, new PerlinNoise() ),
                       new CellularNoise(8)
                 ));
                 depth.applyFilter(new RedistributionFilter(1.3 ));
@@ -86,7 +86,7 @@ public class Depth extends Application {
                 lastImage = depth.getImage();
                 last.setDisable(false);
                 depth.applyFilter( new SumFilter(1.0, 0.25).apply(
-                      new SumFilter(.75, 0.5).apply(new RedistributionFilter(1.0), new PerlinNoise() ),
+                      new SumFilter(.75, 0.5).apply(image -> image, new PerlinNoise() ),
                       new CellularNoise(8)
                 ));
                 depth.applyFilter(new RedistributionFilter(1.3 ));
