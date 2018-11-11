@@ -59,7 +59,6 @@ public class Depth extends Application {
         buttonBar.getChildren().add(generate);
         HBox.setMargin( generate, new Insets(5, 5, 5, 5));
 
-
         Button blendWithNoise = new Button("Blend Noise");
         blendWithNoise.setOnMouseClicked((event) -> {
             Thread process = new Thread(() -> {
@@ -119,10 +118,9 @@ public class Depth extends Application {
                 buttonBar.setDisable(true);
                 lastImage = depth.getImage();
                 last.setDisable(false);
-                depth.applyFilter(new GaussianBlur(3,10));
-                depth.applyFilter(new SobelFilter(0.00001));
+                depth.applyFilter(new SobelFilter(0.07, false, false));
                 long t = System.currentTimeMillis();
-                depth.applyFilter(new CannyFilter());
+                depth.applyFilter(new CannyFilter(0.1, 0.45));
                 System.out.println("Canny (only) processed in : " + (System.currentTimeMillis() - t) + " milliseconds.");
                 view.setImage(depth.getImage());
                 buttonBar.setDisable(false);
@@ -139,8 +137,7 @@ public class Depth extends Application {
                 lastImage = depth.getImage();
                 last.setDisable(false);
                 long t = System.currentTimeMillis();
-                depth.applyFilter(new GaussianBlur(3,10));
-                depth.applyFilter(new SobelFilter(0.0));
+                depth.applyFilter(new SobelFilter(0.1, false, false));
                 System.out.println("Sobel processed in : " + (System.currentTimeMillis() - t) + " milliseconds.");
                 view.setImage(depth.getImage());
                 buttonBar.setDisable(false);
@@ -149,7 +146,6 @@ public class Depth extends Application {
         });
         buttonBar.getChildren().add(edge);
         HBox.setMargin( edge, new Insets(5, 5, 5, 5));
-
 
         Button blur = new Button("Blur");
         blur.setOnMouseClicked((event) -> {
@@ -168,14 +164,13 @@ public class Depth extends Application {
         buttonBar.getChildren().add(blur);
         HBox.setMargin( blur, new Insets(5, 5, 5, 5));
 
-
-        Button redistribute = new Button("Smooth");
+        Button redistribute = new Button("Sharpen");
         redistribute.setOnMouseClicked((event) -> {
             Thread process = new Thread(() -> {
                 buttonBar.setDisable(true);
                 lastImage = depth.getImage();
                 last.setDisable(false);
-                depth.applyFilter(new RedistributionFilter(2));
+                depth.applyFilter(new RedistributionFilter(1.2));
                 view.setImage(depth.getImage());
                 buttonBar.setDisable(false);
             });
@@ -240,8 +235,6 @@ public class Depth extends Application {
 
         root.getChildren().add(buttonBar);
 
-        //primaryStage.minWidthProperty().bind(root.widthProperty());
-        //primaryStage.minWidthProperty().bind(root.heightProperty());
         primaryStage.setTitle("Depth visual test");
         primaryStage.sizeToScene();
         primaryStage.show();
